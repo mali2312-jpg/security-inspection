@@ -1,0 +1,10 @@
+{
+  "name": "Security Inspection",
+  "short_name": "Security Inspection",
+  "description": "Digitale Sicherheitsbegehungen",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f7",
+  "theme_color": "#163a5f",
+  "orientation": "portrait"
+}
