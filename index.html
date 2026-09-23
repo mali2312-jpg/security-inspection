@@ -95,4 +95,126 @@ function createPDFReport(){
  w.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Sicherheitsbegehung</title><style>@page{size:A4;margin:14mm}body{font-family:Arial;color:#17212b}h1,h2{color:#163a5f}table{border-collapse:collapse;width:100%;font-size:10px;margin:10px 0}th,td{border:1px solid #aaa;padding:5px;vertical-align:top}th{background:#163a5f;color:#fff}.meta td:first-child{background:#eee;font-weight:bold;width:25%}.page{page-break-before:always}</style></head><body><h1>Sicherheitsbegehung</h1><table class="meta"><tr><td>Standort</td><td>${esc(siteN)}</td></tr><tr><td>Gebäude</td><td>${esc(building.value)}</td></tr><tr><td>Prüfer</td><td>${esc(inspector.value)}</td></tr><tr><td>Datum</td><td>${esc(date.value)}</td></tr></table><h2>Ergebnisübersicht</h2><table><tr><th>Erfüllt</th><th>Teilweise</th><th>Nicht erfüllt</th><th>N/A</th><th>Offen</th></tr><tr><td>${vals.filter(x=>x.answer==="Erfüllt").length}</td><td>${vals.filter(x=>x.answer==="Teilweise").length}</td><td>${vals.filter(x=>x.answer==="Nein").length}</td><td>${vals.filter(x=>x.answer==="N/A").length}</td><td>${issues.length}</td></tr></table><h2>Executive Summary</h2><p>${esc(summary.value).replace(/\n/g,"<br>")||"Keine Abschlussbemerkung erfasst."}</p><h2>Feststellungen und Maßnahmen</h2>${issues.length?`<table><tr><th>Prüfpunkt</th><th>Status</th><th>Risiko</th><th>Maßnahme</th><th>Verantwortlich</th><th>Frist</th><th>Bearbeitung</th></tr>${rows}</table>`:"<p>Keine offenen Feststellungen.</p>"}<div class="page"><h2>Prüfkatalog</h2><table><tr><th>Nr.</th><th>Prüfpunkt</th><th>Status</th></tr>${all}</table></div></body></html>`);
  w.document.close();setTimeout(()=>w.print(),500);
 }
-</script></body></html>
+function saveInspection(silent=false){
+  const obj={
+    id:currentId||Date.now(),
+    site:site.value,
+    building:building.value,
+    inspector:inspector.value,
+    date:date.value,
+    summary:summary.value,
+    state:JSON.parse(JSON.stringify(state)),
+    saved:new Date().toLocaleString("de-DE")
+  };
+
+  if(!obj.site){
+    alert("Bitte Standort eintragen.");
+    return;
+  }
+
+  const idx=inspections.findIndex(x=>x.id===currentId);
+
+  if(idx>=0){
+    inspections[idx]=obj;
+  }else{
+    inspections.unshift(obj);
+    currentId=obj.id;
+  }
+
+  localStorage.setItem("secInspections",JSON.stringify(inspections));
+
+  if(!sites.includes(obj.site)){
+    sites.push(obj.site);
+    localStorage.setItem("secSites",JSON.stringify(sites));
+  }
+
+  updateDashboard();
+  renderHistory();
+
+  if(!silent){
+    alert("Begehung gespeichert.");
+  }
+}
+
+function renderHistory(){
+  historyList.innerHTML=inspections.length
+    ? inspections.map(i=>`
+      <div class="listitem">
+        <b>${esc(i.site)}</b> · ${esc(i.building||"")}<br>
+        ${esc(i.date||"")} · ${esc(i.inspector||"")}<br>
+        <small>${esc(i.saved||"")}</small><br>
+        <button class="btn primary" style="margin-top:7px"
+          onclick="loadInspection(${i.id})">
+          ✏️ Begehung öffnen / bearbeiten
+        </button>
+      </div>
+    `).join("")
+    : "Keine Begehungen gespeichert.";
+}
+
+function loadInspection(id){
+  const item=inspections.find(x=>x.id===id);
+  if(!item)return;
+
+  newInspection();
+
+  currentId=item.id;
+
+  site.value=item.site||"";
+  building.value=item.building||"";
+  inspector.value=item.inspector||"";
+  date.value=item.date||"";
+  summary.value=item.summary||"";
+
+  const savedByQuestion={};
+
+  Object.values(item.state||{}).forEach(x=>{
+    if(x&&x.q){
+      savedByQuestion[x.q]=x;
+    }
+  });
+
+  Object.keys(state).forEach(id=>{
+    const current=state[id];
+    const saved=savedByQuestion[current.q];
+
+    if(!saved)return;
+
+    Object.assign(current,saved);
+
+    const map={
+      "Erfüllt":0,
+      "Teilweise":1,
+      "Nein":2,
+      "N/A":3
+    };
+
+    const n=map[current.answer];
+    const itemEl=document.getElementById("det"+id);
+
+    if(n!==undefined){
+      const buttons=itemEl.parentElement.querySelectorAll(".ans button");
+      if(buttons[n]){
+        buttons[n].classList.add("sel");
+      }
+    }
+
+    if(itemEl){
+      itemEl.classList.toggle(
+        "show",
+        current.answer==="Teilweise" ||
+        current.answer==="Nein"
+      );
+
+      ["risk","status","measure","owner","due"].forEach(k=>{
+        const el=document.getElementById(k+id);
+        if(el && current[k]!=null){
+          el.value=current[k];
+        }
+      });
+    }
+  });
+
+  show("inspection");
+  updateDashboard();
+}</script></body></html>
