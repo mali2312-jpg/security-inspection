@@ -156,9 +156,9 @@ function loadInspection(id){
   const item=inspections.find(x=>x.id===id);
   if(!item)return;
 
-  newInspection();
-
   currentId=item.id;
+
+  show("inspection");
 
   site.value=item.site||"";
   building.value=item.building||"";
@@ -166,10 +166,41 @@ function loadInspection(id){
   date.value=item.date||"";
   summary.value=item.summary||"";
 
+  inspector.dispatchEvent(new Event("input",{bubbles:true}));
+  site.dispatchEvent(new Event("input",{bubbles:true}));
+  building.dispatchEvent(new Event("input",{bubbles:true}));
+  date.dispatchEvent(new Event("input",{bubbles:true}));
+
+  Object.keys(state).forEach(id=>{
+    state[id]={
+      ...state[id],
+      answer:"",
+      risk:"",
+      status:"",
+      measure:"",
+      owner:"",
+      due:""
+    };
+
+    const box=document.getElementById("det"+id);
+
+    if(box){
+      box.classList.remove("show");
+
+      box.querySelectorAll("input,select,textarea").forEach(el=>{
+        el.value="";
+      });
+
+      box.parentElement
+        .querySelectorAll(".ans button")
+        .forEach(btn=>btn.classList.remove("sel"));
+    }
+  });
+
   const savedByQuestion={};
 
   Object.values(item.state||{}).forEach(x=>{
-    if(x&&x.q){
+    if(x && x.q){
       savedByQuestion[x.q]=x;
     }
   });
@@ -190,17 +221,18 @@ function loadInspection(id){
     };
 
     const n=map[current.answer];
-    const itemEl=document.getElementById("det"+id);
+    const box=document.getElementById("det"+id);
 
-    if(n!==undefined){
-      const buttons=itemEl.parentElement.querySelectorAll(".ans button");
-      if(buttons[n]){
+    if(box){
+      const buttons=box.parentElement.querySelectorAll(".ans button");
+
+      buttons.forEach(btn=>btn.classList.remove("sel"));
+
+      if(n!==undefined && buttons[n]){
         buttons[n].classList.add("sel");
       }
-    }
 
-    if(itemEl){
-      itemEl.classList.toggle(
+      box.classList.toggle(
         "show",
         current.answer==="Teilweise" ||
         current.answer==="Nein"
@@ -208,6 +240,7 @@ function loadInspection(id){
 
       ["risk","status","measure","owner","due"].forEach(k=>{
         const el=document.getElementById(k+id);
+
         if(el && current[k]!=null){
           el.value=current[k];
         }
@@ -215,6 +248,7 @@ function loadInspection(id){
     }
   });
 
-  show("inspection");
   updateDashboard();
-}</script></body></html>
+}
+  
+</script></body></html>
