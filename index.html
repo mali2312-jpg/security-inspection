@@ -79,13 +79,96 @@ function renderSites(){
  siteOptions.innerHTML=sites.map(x=>`<option value="${esc(x)}">`).join("");
 }
 function loadInspection(id){
- const item=inspections.find(x=>x.id===id);if(!item)return;
- newInspection();site.value=item.site||"";building.value=item.building||"";inspector.value=item.inspector||"";date.value=item.date||"";summary.value=item.summary||"";
- Object.keys(item.state||{}).forEach(id=>{if(state[id])Object.assign(state[id],item.state[id]);let x=state[id];if(!x)return;
-  let map={"Erfüllt":0,"Teilweise":1,"Nein":2,"N/A":3},n=map[x.answer],box=document.getElementById("det"+id);
-  if(n!==undefined){let bs=box.parentElement.querySelectorAll(".ans button");if(bs[n])bs[n].classList.add("sel")}
-  if(box){box.classList.toggle("show",x.answer==="Teilweise"||x.answer==="Nein");["risk","status","measure","owner","due"].forEach(k=>{let e=document.getElementById(k+id);if(e&&x[k]!=null)e.value=x[k]})}
- });show("inspection");updateDashboard();
+  const item=inspections.find(x=>x.id===id);
+  if(!item)return;
+
+  currentId=item.id;
+
+  show("inspection");
+
+  document.getElementById("site").value=item.site||"";
+  document.getElementById("building").value=item.building||"";
+  document.getElementById("inspector").value=item.inspector||"";
+  document.getElementById("date").value=item.date||"";
+  document.getElementById("summary").value=item.summary||"";
+
+  Object.keys(state).forEach(id=>{
+    state[id]={
+      ...state[id],
+      answer:"",
+      risk:"",
+      status:"",
+      measure:"",
+      owner:"",
+      due:""
+    };
+
+    const box=document.getElementById("det"+id);
+
+    if(box){
+      box.classList.remove("show");
+
+      box.parentElement
+        .querySelectorAll(".ans button")
+        .forEach(btn=>btn.classList.remove("sel"));
+
+      box.querySelectorAll("input,select,textarea")
+        .forEach(el=>el.value="");
+    }
+  });
+
+  const savedByQuestion={};
+
+  Object.values(item.state||{}).forEach(x=>{
+    if(x && x.q){
+      savedByQuestion[x.q]=x;
+    }
+  });
+
+  Object.keys(state).forEach(id=>{
+    const current=state[id];
+    const saved=savedByQuestion[current.q];
+
+    if(!saved)return;
+
+    Object.assign(current,saved);
+
+    const map={
+      "Erfüllt":0,
+      "Teilweise":1,
+      "Nein":2,
+      "N/A":3
+    };
+
+    const n=map[current.answer];
+    const box=document.getElementById("det"+id);
+
+    if(!box)return;
+
+    const buttons=box.parentElement.querySelectorAll(".ans button");
+
+    buttons.forEach(btn=>btn.classList.remove("sel"));
+
+    if(n!==undefined && buttons[n]){
+      buttons[n].classList.add("sel");
+    }
+
+    box.classList.toggle(
+      "show",
+      current.answer==="Teilweise" ||
+      current.answer==="Nein"
+    );
+
+    ["risk","status","measure","owner","due"].forEach(k=>{
+      const el=document.getElementById(k+id);
+
+      if(el && current[k]!=null){
+        el.value=current[k];
+      }
+    });
+  });
+
+  updateDashboard();
 }
 function createPDFReport(){
  const vals=Object.values(state),siteN=site.value||"Nicht angegeben",issues=vals.filter(x=>x.answer==="Teilweise"||x.answer==="Nein");
@@ -152,103 +235,14 @@ function renderHistory(){
     : "Keine Begehungen gespeichert.";
 }
 
-function loadInspection(id){
-  const item=inspections.find(x=>x.id===id);
-  if(!item)return;
+currentId=item.id;
 
-  currentId=item.id;
+show("inspection");
 
-  show("inspection");
+document.getElementById("site").value=item.site||"";
+document.getElementById("building").value=item.building||"";
+document.getElementById("inspector").value=item.inspector||"";
+document.getElementById("date").value=item.date||"";
 
-  site.value=item.site||"";
-  building.value=item.building||"";
-  inspector.value=item.inspector||"";
-  date.value=item.date||"";
-  summary.value=item.summary||"";
-
-  inspector.dispatchEvent(new Event("input",{bubbles:true}));
-  site.dispatchEvent(new Event("input",{bubbles:true}));
-  building.dispatchEvent(new Event("input",{bubbles:true}));
-  date.dispatchEvent(new Event("input",{bubbles:true}));
-
-  Object.keys(state).forEach(id=>{
-    state[id]={
-      ...state[id],
-      answer:"",
-      risk:"",
-      status:"",
-      measure:"",
-      owner:"",
-      due:""
-    };
-
-    const box=document.getElementById("det"+id);
-
-    if(box){
-      box.classList.remove("show");
-
-      box.querySelectorAll("input,select,textarea").forEach(el=>{
-        el.value="";
-      });
-
-      box.parentElement
-        .querySelectorAll(".ans button")
-        .forEach(btn=>btn.classList.remove("sel"));
-    }
-  });
-
-  const savedByQuestion={};
-
-  Object.values(item.state||{}).forEach(x=>{
-    if(x && x.q){
-      savedByQuestion[x.q]=x;
-    }
-  });
-
-  Object.keys(state).forEach(id=>{
-    const current=state[id];
-    const saved=savedByQuestion[current.q];
-
-    if(!saved)return;
-
-    Object.assign(current,saved);
-
-    const map={
-      "Erfüllt":0,
-      "Teilweise":1,
-      "Nein":2,
-      "N/A":3
-    };
-
-    const n=map[current.answer];
-    const box=document.getElementById("det"+id);
-
-    if(box){
-      const buttons=box.parentElement.querySelectorAll(".ans button");
-
-      buttons.forEach(btn=>btn.classList.remove("sel"));
-
-      if(n!==undefined && buttons[n]){
-        buttons[n].classList.add("sel");
-      }
-
-      box.classList.toggle(
-        "show",
-        current.answer==="Teilweise" ||
-        current.answer==="Nein"
-      );
-
-      ["risk","status","measure","owner","due"].forEach(k=>{
-        const el=document.getElementById(k+id);
-
-        if(el && current[k]!=null){
-          el.value=current[k];
-        }
-      });
-    }
-  });
-
-  updateDashboard();
-}
   
 </script></body></html>
