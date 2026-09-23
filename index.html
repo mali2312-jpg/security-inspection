@@ -11,7 +11,7 @@ main{padding:0 13px}.card{background:#fff;border:1px solid #dfe4e9;border-radius
 .section{font-weight:800;color:#163a5f;margin:19px 2px 6px}.item{border-top:1px solid #e7eaee;padding:12px 0}.q{font-weight:650;font-size:14px}.ans{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}.ans button{border:1px solid #dfe4e9;background:#f5f6f8;border-radius:8px;padding:8px 2px;font-size:11px}.ans .sel{outline:2px solid #163a5f}.detail{display:none;margin-top:8px}.detail.show{display:block}.row{display:flex;gap:7px}.row>*{flex:1}.btn{border:0;border-radius:10px;padding:11px 13px;font-weight:750}.primary{background:#163a5f;color:white}.secondary{background:#e9edf1}.danger{color:#b42318}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#eef1f4;font-size:10px}.listitem{border-top:1px solid #e5e8ec;padding:11px 0}.hidden{display:none}.bottom{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #dfe4e9;padding:10px 13px;display:flex;gap:7px;z-index:5}.bottom>*{flex:1}
 @media(max-width:520px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.nav{font-size:9px}}
 @media print{nav,.bottom{display:none}.app{max-width:none}.card{box-shadow:none}body{background:white}}
-</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#163a5f"></head><body><div class="app">
+</style></head><body><div class="app">
 <header><small>SECURITY MANAGEMENT</small><h1>Security Inspection</h1><div>V5 · Digital Security Inspection Tool</div></header>
 <nav><div class="nav" onclick="show('home')">🏠<br>Dashboard</div><div class="nav" onclick="show('sites')">🏢<br>Standorte</div><div class="nav" onclick="newInspection()">🔍<br>Begehung</div><div class="nav" onclick="show('actions')">⚠️<br>Maßnahmen</div><div class="nav" onclick="show('history')">🕘<br>Historie</div></nav>
 <main>
@@ -19,7 +19,9 @@ main{padding:0 13px}.card{background:#fff;border:1px solid #dfe4e9;border-radius
 <div class="card"><h3>Schnellstart</h3><button class="btn primary" onclick="newInspection()">+ Neue Sicherheitsbegehung</button></div>
 <div class="card"><h3>Systemstatus</h3><span class="pill">Offline-fähig</span> <span class="pill">iPhone / iPad</span> <span class="pill">16 Prüfpunkte</span></div></section>
 
-<section id="sites" class="hidden"><div class="card"><h2>Standorte</h2><input id="newSite" placeholder="Neuen Standort eingeben"><button class="btn primary" onclick="addSite()">Standort hinzufügen</button><div id="siteList"></div></div></section>
+<section id="sites" class="hidden"><div class="card"><h2>Standorte</h2>
+<input id="newSite" placeholder="Neuen Standort eingeben"><button class="btn primary" onclick="addSite()">Standort hinzufügen</button><div id="siteList"></div></div>
+<div id="siteEditor" class="card hidden"><h3>Standort bearbeiten</h3><input id="editSiteName"><div class="row"><button class="btn primary" onclick="saveSiteEdit()">Speichern</button><button class="btn secondary" onclick="closeSiteEditor()">Schließen</button></div><div id="siteInspections"></div></div></section>
 
 <section id="inspection" class="hidden"><div class="card"><h2>Neue Sicherheitsbegehung</h2><div class="grid"><div><label>Standort</label><input id="site" list="siteOptions" placeholder="Standort B"><datalist id="siteOptions"></datalist></div><div><label>Gebäude / Bereich</label><input id="building" placeholder="Bau 10"></div><div><label>Prüfer</label><input id="inspector" placeholder="Name"></div><div><label>Datum</label><input id="date" type="date"></div></div></div><div id="checklist"></div>
 <div class="card"><h3>Executive Summary</h3><textarea id="summary" placeholder="Wesentliche Feststellungen und Gesamteinschätzung..."></textarea></div>
@@ -28,7 +30,7 @@ main{padding:0 13px}.card{background:#fff;border:1px solid #dfe4e9;border-radius
 <section id="actions" class="hidden"><div class="card"><h2>Maßnahmenverfolgung</h2><div id="actionList">Keine offenen Maßnahmen.</div></div></section>
 <section id="history" class="hidden"><div class="card"><h2>Begehungshistorie</h2><div id="historyList">Keine Begehungen gespeichert.</div></div></section>
 </main>
-<div class="bottom"><button class="btn secondary" onclick="saveInspection(true)">Speichern</button><button class="btn primary" onclick="printReport()">Bericht / PDF</button></div>
+<div class="bottom"><button class="btn secondary" onclick="saveInspection(true)">Speichern</button><button class="btn primary" onclick="createPDFReport()">📄 PDF-Bericht</button></div>
 </div>
 <script>
 const catalog={"Perimeterschutz":["Außenbeleuchtung ausreichend vorhanden?","Vegetation frei von Sichtbehinderungen?","Zufahrten/Parkflächen geregelt?","Kanäle/Schächte gesichert?","Grundstücksgrenzen gekennzeichnet?"],"Physische Sicherheit":["Zutrittskontrolle funktionsfähig?","Türen/Fenster ausreichend gesichert?"],"Technische Sicherheit":["CCTV funktionsfähig?","CCTV-Wartung nachweisbar?","Besuchermanagement umgesetzt?"],"Organisation":["Sicherheitskonzept aktuell?","SSR benannt?","Notfallpläne vorhanden?"],"Kritische Bereiche":["IT-/Datenräume geschützt?"],"Compliance":["Business Continuity vorhanden?","Klimarisikoanalyse vorhanden?"]};
@@ -47,4 +49,40 @@ function renderHistory(){historyList.innerHTML=inspections.length?inspections.ma
 function updateDashboard(){let all=Object.values(state),open=0,high=0,done=0;all.forEach(x=>{if(x.answer==="Teilweise"||x.answer==="Nein")open++;if(x.r==="Hoch"||x.r==="Kritisch")high++;if(x.status==="Erledigt")done++});inspections.forEach(i=>Object.values(i.state||{}).forEach(x=>{if(x.answer==="Teilweise"||x.answer==="Nein")open++;if(x.r==="Hoch"||x.r==="Kritisch")high++;if(x.status==="Erledigt")done++}));dTotal.textContent=inspections.length;dOpen.textContent=open;dHigh.textContent=high;dDone.textContent=done;dSites.textContent=sites.length}
 function printReport(){window.print()}
 date.value=new Date().toISOString().slice(0,10);build();renderSites();renderHistory();updateDashboard();
-</script><script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{});}</script></body></html>
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function quote(s){return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
+function openSite(name){
+ const ed=document.getElementById("siteEditor"); ed.dataset.original=name; document.getElementById("editSiteName").value=name; ed.classList.remove("hidden");
+ const rows=inspections.filter(x=>x.site===name);
+ document.getElementById("siteInspections").innerHTML="<h3 style='margin-top:15px'>Begehungen</h3>"+(rows.length?rows.map(x=>`<div class="listitem"><b>${esc(x.date||"Ohne Datum")}</b> · ${esc(x.building||"")}<br><small>${esc(x.inspector||"")}</small><br><button class="btn secondary" onclick="loadInspection(${x.id})">Begehung öffnen</button></div>`).join(""):"Keine Begehungen für diesen Standort.");
+}
+function closeSiteEditor(){document.getElementById("siteEditor").classList.add("hidden")}
+function saveSiteEdit(){
+ const old=document.getElementById("siteEditor").dataset.original,newn=document.getElementById("editSiteName").value.trim();
+ if(!newn){alert("Bitte Standortnamen eingeben.");return}
+ sites=sites.map(x=>x===old?newn:x); inspections.forEach(x=>{if(x.site===old)x.site=newn});
+ localStorage.setItem("secSites",JSON.stringify(sites));localStorage.setItem("secInspections",JSON.stringify(inspections));closeSiteEditor();renderSites();renderHistory();updateDashboard();
+}
+function renderSites(){
+ siteList.innerHTML=sites.length?sites.map(x=>`<div class="listitem"><b>🏢 ${esc(x)}</b><div class="row" style="margin-top:7px"><button class="btn primary" onclick="openSite('${quote(x)}')">Öffnen / bearbeiten</button><button class="btn secondary" onclick="newInspection();setTimeout(()=>document.getElementById('site').value='${quote(x)}',50)">Neue Begehung</button></div></div>`).join(""):"Noch keine Standorte.";
+ siteOptions.innerHTML=sites.map(x=>`<option value="${esc(x)}">`).join("");
+}
+function loadInspection(id){
+ const item=inspections.find(x=>x.id===id);if(!item)return;
+ newInspection();site.value=item.site||"";building.value=item.building||"";inspector.value=item.inspector||"";date.value=item.date||"";summary.value=item.summary||"";
+ Object.keys(item.state||{}).forEach(id=>{if(state[id])Object.assign(state[id],item.state[id]);let x=state[id];if(!x)return;
+  let map={"Erfüllt":0,"Teilweise":1,"Nein":2,"N/A":3},n=map[x.answer],box=document.getElementById("det"+id);
+  if(n!==undefined){let bs=box.parentElement.querySelectorAll(".ans button");if(bs[n])bs[n].classList.add("sel")}
+  if(box){box.classList.toggle("show",x.answer==="Teilweise"||x.answer==="Nein");["risk","status","measure","owner","due"].forEach(k=>{let e=document.getElementById(k+id);if(e&&x[k]!=null)e.value=x[k]})}
+ });show("inspection");updateDashboard();
+}
+function createPDFReport(){
+ const vals=Object.values(state),siteN=site.value||"Nicht angegeben",issues=vals.filter(x=>x.answer==="Teilweise"||x.answer==="Nein");
+ const w=window.open("","_blank");if(!w){alert("Bitte Pop-ups für diese Seite erlauben.");return}
+ const rows=issues.map(x=>`<tr><td>${esc(x.q)}</td><td>${esc(x.answer)}</td><td>${esc(x.r||"")}</td><td>${esc(x.measure||"")}</td><td>${esc(x.owner||"")}</td><td>${esc(x.due||"")}</td><td>${esc(x.status||"Offen")}</td></tr>`).join("");
+ const all=vals.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.q)}</td><td>${esc(x.answer||"Offen")}</td></tr>`).join("");
+ w.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Sicherheitsbegehung</title><style>@page{size:A4;margin:14mm}body{font-family:Arial;color:#17212b}h1,h2{color:#163a5f}table{border-collapse:collapse;width:100%;font-size:10px;margin:10px 0}th,td{border:1px solid #aaa;padding:5px;vertical-align:top}th{background:#163a5f;color:#fff}.meta td:first-child{background:#eee;font-weight:bold;width:25%}.page{page-break-before:always}</style></head><body><h1>Sicherheitsbegehung</h1><table class="meta"><tr><td>Standort</td><td>${esc(siteN)}</td></tr><tr><td>Gebäude</td><td>${esc(building.value)}</td></tr><tr><td>Prüfer</td><td>${esc(inspector.value)}</td></tr><tr><td>Datum</td><td>${esc(date.value)}</td></tr></table><h2>Ergebnisübersicht</h2><table><tr><th>Erfüllt</th><th>Teilweise</th><th>Nicht erfüllt</th><th>N/A</th><th>Offen</th></tr><tr><td>${vals.filter(x=>x.answer==="Erfüllt").length}</td><td>${vals.filter(x=>x.answer==="Teilweise").length}</td><td>${vals.filter(x=>x.answer==="Nein").length}</td><td>${vals.filter(x=>x.answer==="N/A").length}</td><td>${issues.length}</td></tr></table><h2>Executive Summary</h2><p>${esc(summary.value).replace(/\n/g,"<br>")||"Keine Abschlussbemerkung erfasst."}</p><h2>Feststellungen und Maßnahmen</h2>${issues.length?`<table><tr><th>Prüfpunkt</th><th>Status</th><th>Risiko</th><th>Maßnahme</th><th>Verantwortlich</th><th>Frist</th><th>Bearbeitung</th></tr>${rows}</table>`:"<p>Keine offenen Feststellungen.</p>"}<div class="page"><h2>Prüfkatalog</h2><table><tr><th>Nr.</th><th>Prüfpunkt</th><th>Status</th></tr>${all}</table></div></body></html>`);
+ w.document.close();setTimeout(()=>w.print(),500);
+}
+</script></body></html>
