@@ -86,48 +86,15 @@ function loadInspection(id){
 
   show("inspection");
 
-  document.getElementById("site").value=item.site||"";
-  document.getElementById("building").value=item.building||"";
-  document.getElementById("inspector").value=item.inspector||"";
-  document.getElementById("date").value=item.date||"";
-  document.getElementById("summary").value=item.summary||"";
-
-  Object.keys(state).forEach(id=>{
-    state[id]={
-      ...state[id],
-      answer:"",
-      risk:"",
-      status:"",
-      measure:"",
-      owner:"",
-      due:""
-    };
-
-    const box=document.getElementById("det"+id);
-
-    if(box){
-      box.classList.remove("show");
-
-      box.parentElement
-        .querySelectorAll(".ans button")
-        .forEach(btn=>btn.classList.remove("sel"));
-
-      box.querySelectorAll("input,select,textarea")
-        .forEach(el=>el.value="");
-    }
-  });
-
-  const savedByQuestion={};
-
-  Object.values(item.state||{}).forEach(x=>{
-    if(x && x.q){
-      savedByQuestion[x.q]=x;
-    }
-  });
+  site.value=item.site||"";
+  building.value=item.building||"";
+  inspector.value=item.inspector||"";
+  date.value=item.date||"";
+  summary.value=item.summary||"";
 
   Object.keys(state).forEach(id=>{
     const current=state[id];
-    const saved=savedByQuestion[current.q];
+    const saved=item.state&&item.state[id];
 
     if(!saved)return;
 
