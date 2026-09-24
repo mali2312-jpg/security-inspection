@@ -80,29 +80,30 @@ function renderSites(){
 }
 function loadInspection(id){
   const item=inspections.find(x=>String(x.id)===String(id));
-  alert("Standort: "+item.site+" | Gebäude: "+item.building+" | Prüfer: "+item.inspector+" | Datum: "+item.date);
- if(!item)return;
+  if(!item)return;
 
   currentId=item.id;
+
+  document.getElementById("checklist").innerHTML="";
+  build();
 
   document.getElementById("site").value=item.site||"";
   document.getElementById("building").value=item.building||"";
   document.getElementById("inspector").value=item.inspector||"";
   document.getElementById("date").value=item.date||"";
   document.getElementById("summary").value=item.summary||"";
- 
- show("inspection");
- 
-alert(
-  "Felder nach dem Laden:\n" +
-  document.getElementById("site").value + " | " +
-  document.getElementById("building").value + " | " +
-  document.getElementById("inspector").value + " | " +
-  document.getElementById("date").value
-);
+
+  const savedByQuestion={};
+
+  Object.values(item.state||{}).forEach(saved=>{
+    if(saved && saved.q){
+      savedByQuestion[saved.q]=saved;
+    }
+  });
+
   Object.keys(state).forEach(id=>{
     const current=state[id];
-    const saved=item.state&&item.state[id];
+    const saved=savedByQuestion[current.q];
 
     if(!saved)return;
 
@@ -116,6 +117,7 @@ alert(
     };
 
     const box=document.getElementById("det"+id);
+
     if(!box)return;
 
     const buttons=box.parentElement.querySelectorAll(".ans button");
@@ -143,6 +145,7 @@ alert(
     });
   });
 
+  show("inspection");
   updateDashboard();
 }
 function createPDFReport(){
