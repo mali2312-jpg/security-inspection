@@ -80,7 +80,8 @@ function renderSites(){
 }
 function loadInspection(id){
   const item=inspections.find(x=>String(x.id)===String(id));
-  if(!item)return;
+  alert("ID: "+id+" | Datensatz gefunden: "+(item?"JA":"NEIN"));
+ if(!item)return;
 
   currentId=item.id;
 
