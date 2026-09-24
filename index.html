@@ -80,7 +80,7 @@ function renderSites(){
 }
 function loadInspection(id){
   const item=inspections.find(x=>String(x.id)===String(id));
-  alert("ID: "+id+" | Datensatz gefunden: "+(item?"JA":"NEIN"));
+  alert("Standort: "+item.site+" | Gebäude: "+item.building+" | Prüfer: "+item.inspector+" | Datum: "+item.date);
  if(!item)return;
 
   currentId=item.id;
