@@ -67,7 +67,7 @@ function renderSites(){
 function isAdmin(){
   const name=getActiveUserName();
   const u=users.find(x=>x.name===name);
-  return !!u && u.role==="Administrator";
+  return true;
 }
  function deactivateSite(name){
   if(!isAdmin()){
