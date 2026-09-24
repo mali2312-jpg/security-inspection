@@ -45,8 +45,49 @@ function photo(id){let input=document.createElement("input");input.type="file";i
 function show(id){["home","sites","inspection","actions","history","users"].forEach(x=>document.getElementById(x).classList.toggle("hidden",x!==id));if(id==="sites")renderSites();if(id==="actions")renderActions();if(id==="history")renderHistory();if(id==="users")renderUsers();updateDashboard();scrollTo(0,0)}
 function newInspection(){state={};currentId=0;document.getElementById("checklist").innerHTML="";build();date.value=new Date().toISOString().slice(0,10);inspector.value=getActiveUserName();show("inspection");}
 function addSite(){let x=newSite.value.trim();if(!x)return;if(!sites.includes(x))sites.push(x);localStorage.setItem("secSites",JSON.stringify(sites));newSite.value="";renderSites()}
-function renderSites(){siteList.innerHTML=sites.length?sites.map(x=>`<div class="listitem"><b>🏢 ${x}</b></div>`).join(""):"Noch keine Standorte.";siteOptions.innerHTML=sites.map(x=>`<option value="${x}">`).join("")}
+function renderSites(){
+  const inactive=JSON.parse(localStorage.getItem("secInactiveSites")||"[]");
+  const activeSites=sites.filter(x=>!inactive.includes(x));
 
+  siteList.innerHTML=activeSites.length
+    ? activeSites.map(x=>
+      `<div class="listitem">
+        <b>🏢 ${esc(x)}</b>
+        ${isAdmin()
+          ? `<button class="btn secondary" onclick="deactivateSite('${quote(x)}')">🗑️ Standort deaktivieren</button>`
+          : ""}
+      </div>`
+    ).join("")
+    : "Keine aktiven Standorte.";
+
+  siteOptions.innerHTML=activeSites.map(x=>
+    `<option value="${esc(x)}">${esc(x)}</option>`
+  ).join("");
+}
+function isAdmin(){
+  const u=getActiveUser();
+  return !!u && u.role==="Administrator";
+}
+ function deactivateSite(name){
+  if(!isAdmin()){
+    alert("Nur Administratoren dürfen Standorte deaktivieren.");
+    return;
+  }
+
+  if(!confirm("Standort \""+name+"\" wirklich deaktivieren? Die vorhandenen Begehungen bleiben erhalten.")){
+    return;
+  }
+
+  const inactive=JSON.parse(localStorage.getItem("secInactiveSites")||"[]");
+
+  if(!inactive.includes(name)){
+    inactive.push(name);
+  }
+
+  localStorage.setItem("secInactiveSites",JSON.stringify(inactive));
+
+  renderSites();
+}
 function renderActions(){let arr=[];inspections.forEach(i=>Object.values(i.state||{}).forEach(x=>{if(x.answer==="Teilweise"||x.answer==="Nein")arr.push({site:i.site,q:x.q,r:x.r,m:x.measure,o:x.owner,d:x.due,s:x.status})}));actionList.innerHTML=arr.length?arr.map(x=>`<div class="listitem"><b>${x.site}</b><br>${x.q}<br><span class="pill">${x.r||"Risiko offen"}</span> <span class="pill">${x.s||"Offen"}</span><br>${x.m||"Keine Maßnahme"}<br><small>${x.o||"Kein Verantwortlicher"} · ${x.d||"Keine Frist"}</small></div>`).join(""):"Keine offenen Maßnahmen."}
 function renderHistory(){historyList.innerHTML=inspections.length?inspections.map(i=>`<div class="listitem"><b>${i.site}</b> · ${i.building||""}<br>${i.date||""} · ${i.inspector||""}<br><small>${i.saved}</small></div>`).join(""):"Keine Begehungen gespeichert."}
 function getActiveUser(){return users.find(x=>x.id===activeUser)||null}
