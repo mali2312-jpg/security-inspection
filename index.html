@@ -79,18 +79,18 @@ function renderSites(){
  siteOptions.innerHTML=sites.map(x=>`<option value="${esc(x)}">`).join("");
 }
 function loadInspection(id){
-  const item=inspections.find(x=>x.id===id);
+  const item=inspections.find(x=>String(x.id)===String(id));
   if(!item)return;
 
   currentId=item.id;
 
   show("inspection");
 
-  site.value=item.site||"";
-  building.value=item.building||"";
-  inspector.value=item.inspector||"";
-  date.value=item.date||"";
-  summary.value=item.summary||"";
+  document.getElementById("site").value=item.site||"";
+  document.getElementById("building").value=item.building||"";
+  document.getElementById("inspector").value=item.inspector||"";
+  document.getElementById("date").value=item.date||"";
+  document.getElementById("summary").value=item.summary||"";
 
   Object.keys(state).forEach(id=>{
     const current=state[id];
@@ -107,14 +107,14 @@ function loadInspection(id){
       "N/A":3
     };
 
-    const n=map[current.answer];
     const box=document.getElementById("det"+id);
-
     if(!box)return;
 
     const buttons=box.parentElement.querySelectorAll(".ans button");
 
     buttons.forEach(btn=>btn.classList.remove("sel"));
+
+    const n=map[current.answer];
 
     if(n!==undefined && buttons[n]){
       buttons[n].classList.add("sel");
@@ -129,8 +129,8 @@ function loadInspection(id){
     ["risk","status","measure","owner","due"].forEach(k=>{
       const el=document.getElementById(k+id);
 
-      if(el && current[k]!=null){
-        el.value=current[k];
+      if(el){
+        el.value=current[k]||"";
       }
     });
   });
