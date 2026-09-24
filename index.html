@@ -92,7 +92,13 @@ function loadInspection(id){
   document.getElementById("inspector").value=item.inspector||"";
   document.getElementById("date").value=item.date||"";
   document.getElementById("summary").value=item.summary||"";
-
+alert(
+  "Felder nach dem Laden:\n" +
+  document.getElementById("site").value + " | " +
+  document.getElementById("building").value + " | " +
+  document.getElementById("inspector").value + " | " +
+  document.getElementById("date").value
+);
   Object.keys(state).forEach(id=>{
     const current=state[id];
     const saved=item.state&&item.state[id];
