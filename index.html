@@ -85,13 +85,14 @@ function loadInspection(id){
 
   currentId=item.id;
 
-  show("inspection");
-
   document.getElementById("site").value=item.site||"";
   document.getElementById("building").value=item.building||"";
   document.getElementById("inspector").value=item.inspector||"";
   document.getElementById("date").value=item.date||"";
   document.getElementById("summary").value=item.summary||"";
+ 
+ show("inspection");
+ 
 alert(
   "Felder nach dem Laden:\n" +
   document.getElementById("site").value + " | " +
